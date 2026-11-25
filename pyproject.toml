@@ -7,8 +7,11 @@ name = "invoiceflow"
 version = "0.1.0"
 description = "Invoice processing engine for supplier invoices"
 requires-python = ">=3.12"
-dependencies = []
-
+dependencies = [
+    "pymupdf>=1.24",
+    "pytesseract>=0.3.13",
+    "openpyxl>=3.1.5",
+]
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",

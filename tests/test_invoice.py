@@ -646,3 +646,114 @@ def test_invoice_uses_independent_default_lists():
     assert invoice1.withholdings is not invoice2.withholdings
     assert invoice1.adjustments is not invoice2.adjustments
     assert invoice1.payments is not invoice2.payments
+from invoiceflow.models.payment import Payment
+
+
+def test_invoice_calculated_total():
+    invoice = Invoice(
+        invoice_number="INV-300",
+        issue_date=date(2026, 11, 20),
+        supplier_name="Test Supplier",
+        supplier_tax_id="B12345678",
+        tax_breakdown=[
+            TaxBreakdown(
+                taxable_base=Decimal("1000.00"),
+                tax_rate=Decimal("21"),
+                tax_amount=Decimal("210.00"),
+            )
+        ],
+    )
+
+    assert invoice.calculated_total == Decimal("1210.00")
+
+
+def test_invoice_paid_amount():
+    invoice = Invoice(
+        invoice_number="INV-301",
+        issue_date=date(2026, 11, 20),
+        supplier_name="Test Supplier",
+        supplier_tax_id="B12345678",
+        payments=[
+            Payment(
+                payment_date=date(2026, 11, 20),
+                amount=Decimal("300.00"),
+            ),
+            Payment(
+                payment_date=date(2026, 11, 21),
+                amount=Decimal("200.00"),
+            ),
+        ],
+    )
+
+    assert invoice.paid_amount == Decimal("500.00")
+
+
+def test_invoice_outstanding_balance():
+    invoice = Invoice(
+        invoice_number="INV-302",
+        issue_date=date(2026, 11, 20),
+        supplier_name="Test Supplier",
+        supplier_tax_id="B12345678",
+        tax_breakdown=[
+            TaxBreakdown(
+                taxable_base=Decimal("1000.00"),
+                tax_rate=Decimal("21"),
+                tax_amount=Decimal("210.00"),
+            )
+        ],
+        payments=[
+            Payment(
+                payment_date=date(2026, 11, 20),
+                amount=Decimal("500.00"),
+            )
+        ],
+    )
+
+    assert invoice.outstanding_balance == Decimal("710.00")
+def test_document_total_matches_calculated():
+    invoice = Invoice(
+        invoice_number="INV-400",
+        issue_date=date(2026, 11, 20),
+        supplier_name="Test Supplier",
+        supplier_tax_id="B12345678",
+        tax_breakdown=[
+            TaxBreakdown(
+                taxable_base=Decimal("1000.00"),
+                tax_rate=Decimal("21"),
+                tax_amount=Decimal("210.00"),
+            )
+        ],
+        document_total=Decimal("1210.00"),
+    )
+
+    assert invoice.document_total_matches_calculated is True
+
+
+def test_document_total_does_not_match_calculated():
+    invoice = Invoice(
+        invoice_number="INV-401",
+        issue_date=date(2026, 11, 20),
+        supplier_name="Test Supplier",
+        supplier_tax_id="B12345678",
+        tax_breakdown=[
+            TaxBreakdown(
+                taxable_base=Decimal("1000.00"),
+                tax_rate=Decimal("21"),
+                tax_amount=Decimal("210.00"),
+            )
+        ],
+        document_total=Decimal("1200.00"),
+    )
+
+    assert invoice.document_total_matches_calculated is False
+
+
+def test_document_total_matches_calculated_when_missing():
+    invoice = Invoice(
+        invoice_number="INV-402",
+        issue_date=date(2026, 11, 20),
+        supplier_name="Test Supplier",
+        supplier_tax_id="B12345678",
+    )
+
+    assert invoice.document_total_matches_calculated is None

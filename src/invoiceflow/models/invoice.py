@@ -7,6 +7,7 @@ from invoiceflow.models.adjustment import Adjustment
 from invoiceflow.models.payment import Payment
 from invoiceflow.models.tax_breakdown import TaxBreakdown
 from invoiceflow.models.withholding import Withholding
+from invoiceflow.calculator import InvoiceCalculator
 
 
 
@@ -162,3 +163,29 @@ class Invoice:
             raise ValueError(
                 "Currency must be a three-letter uppercase code."
             )
+
+    @property
+    def calculated_total(self) -> Decimal:
+        return InvoiceCalculator.calculate_total(
+            self.tax_breakdown,
+            self.withholdings,
+            self.adjustments,
+        )
+
+    @property
+    def paid_amount(self) -> Decimal:
+        return InvoiceCalculator.calculate_paid_amount(self.payments)
+
+    @property
+    def outstanding_balance(self) -> Decimal:
+        return InvoiceCalculator.calculate_balance(
+            self.calculated_total,
+            self.payments,
+        )
+
+    @property
+    def document_total_matches_calculated(self) -> bool | None:
+        if self.document_total is None:
+            return None
+
+        return self.document_total == self.calculated_total

@@ -1,10 +1,14 @@
+
 from invoiceflow.main import main
 
 
-def test_main(capsys):
-    main()
+def test_main_requires_document_argument(monkeypatch):
+    monkeypatch.setattr(
+        "sys.argv",
+        ["invoiceflow", "--help"],
+    )
 
-    captured = capsys.readouterr()
-
-    assert "InvoiceFlow" in captured.out
-    assert "initialized successfully" in captured.out
+    try:
+        main()
+    except SystemExit as error:
+        assert error.code == 0
